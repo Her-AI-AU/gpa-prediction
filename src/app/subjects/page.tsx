@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import SubjectInfo from "../subjects-info/page";
+import { Header } from "@/components/header";
 
 const subjectDetails = {
   "Math 101": {
@@ -114,120 +115,123 @@ export default function Subjects() {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Calculator Page</h1>
+    <>
+      <Header />
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-6">Calculator Page</h1>
 
-      <div className="mb-6">
-        <label htmlFor="semester" className="block text-gray-700 mb-2">
-          Choose a Semester:
-        </label>
-        <select
-          id="semester"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={selectedSemester}
-          onChange={handleSemesterChange}
-        >
-          <option value="">Select a semester</option>
-          {Object.keys(semesterData).map((semester) => (
-            <option key={semester} value={semester}>
-              {semester}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedSemester && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-4">
-            Subjects for {selectedSemester}:
-          </h2>
-          <ul className="list-disc pl-6">
-            {subjects.map((subject, index) => (
-              <li key={index} className="mb-2">
-                <SubjectInfo {...subjectDetails[subject]} />
-              </li>
-            ))}
-          </ul>
-          <button
-            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors duration-200 mt-4"
-            onClick={() => setIsModalOpen(true)}
+        <div className="mb-6">
+          <label htmlFor="semester" className="block text-gray-700 mb-2">
+            Choose a Semester:
+          </label>
+          <select
+            id="semester"
+            className="w-full p-2 border border-gray-300 rounded"
+            value={selectedSemester}
+            onChange={handleSemesterChange}
           >
-            Add New Subject
-          </button>
+            <option value="">Select a semester</option>
+            {Object.keys(semesterData).map((semester) => (
+              <option key={semester} value={semester}>
+                {semester}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-80">
-            <h2 className="text-xl font-bold mb-4">Add New Subject</h2>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Subject Name</label>
-              <input
-                type="text"
-                name="name"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={newSubject.name}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Hurdle</label>
-              <input
-                type="text"
-                name="hurdle"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={newSubject.hurdle}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Description</label>
-              <input
-                type="text"
-                name="description"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={newSubject.description}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Time</label>
-              <input
-                type="text"
-                name="time"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={newSubject.time}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Assessments</label>
-              <input
-                type="text"
-                name="assessments"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={newSubject.assessments}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="bg-gray-300 text-gray-700 py-2 px-4 rounded mr-2 hover:bg-gray-400 transition-colors duration-200"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-200"
-                onClick={handleAddSubject}
-              >
-                Add Subject
-              </button>
+        {selectedSemester && (
+          <div className="mt-4">
+            <h2 className="text-xl font-semibold mb-4">
+              Subjects for {selectedSemester}:
+            </h2>
+            <ul className="list-disc pl-6">
+              {subjects.map((subject, index) => (
+                <li key={index} className="mb-2">
+                  <SubjectInfo {...subjectDetails[subject]} />
+                </li>
+              ))}
+            </ul>
+            <button
+              className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors duration-200 mt-4"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Add New Subject
+            </button>
+          </div>
+        )}
+
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg p-6 w-80">
+              <h2 className="text-xl font-bold mb-4">Add New Subject</h2>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Subject Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newSubject.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Hurdle</label>
+                <input
+                  type="text"
+                  name="hurdle"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newSubject.hurdle}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Description</label>
+                <input
+                  type="text"
+                  name="description"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newSubject.description}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Time</label>
+                <input
+                  type="text"
+                  name="time"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newSubject.time}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Assessments</label>
+                <input
+                  type="text"
+                  name="assessments"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={newSubject.assessments}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded mr-2 hover:bg-gray-400 transition-colors duration-200"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-200"
+                  onClick={handleAddSubject}
+                >
+                  Add Subject
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
