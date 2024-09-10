@@ -11,10 +11,9 @@ export default function Home() {
             className="bg-white shadow-md rounded-lg p-6 text-center w-80"
             href="/subjects"
           >
-            <h2 className="text-2xl font-semibold mb-4">Calculator</h2>
+            <h2 className="text-2xl font-semibold mb-4">Subjects</h2>
             <p className="text-gray-600 mb-6">
-              This is a simple calculator to help you with your GPA
-              calculations.
+              View your subjects and their scores.
             </p>
           </Link>
 

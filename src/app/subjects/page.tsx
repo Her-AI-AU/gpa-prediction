@@ -1,137 +1,124 @@
 "use client";
-import { useState } from "react";
-import SubjectInfo from "../subjects-info/page";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 
-const subjectDetails = {
-  "Math 101": {
-    name: "Math 101",
-    hurdle: "Pass in all assessments",
-    description: "Introduction to basic mathematics principles.",
-    time: "MWF 10:00 - 11:00",
-    assessments: "Midterm, Final Exam",
-  },
-  "English 101": {
-    name: "English 101",
-    hurdle: "Complete all assignments",
-    description: "Basics of English grammar and composition.",
-    time: "TTh 09:00 - 10:30",
-    assessments: "Essay, Oral Presentation",
-  },
-  "History 101": {
-    name: "History 101",
-    hurdle: "Minimum 50% in final exam",
-    description: "Overview of ancient civilizations.",
-    time: "MWF 11:00 - 12:00",
-    assessments: "Research Paper, Final Exam",
-  },
-  "Math 102": {
-    name: "Math 102",
-    hurdle: "Pass in all assessments",
-    description: "Advanced mathematics topics building on Math 101.",
-    time: "MWF 09:00 - 10:00",
-    assessments: "Midterm, Final Exam",
-  },
-  "English 102": {
-    name: "English 102",
-    hurdle: "Complete all assignments",
-    description: "Advanced English grammar and composition.",
-    time: "TTh 10:30 - 12:00",
-    assessments: "Essay, Oral Presentation",
-  },
-  "Biology 101": {
-    name: "Biology 101",
-    hurdle: "Minimum 60% in final exam",
-    description: "Introduction to biological sciences.",
-    time: "MWF 12:00 - 13:00",
-    assessments: "Lab Reports, Final Exam",
-  },
-  "Math 201": {
-    name: "Math 201",
-    hurdle: "Minimum 60% in final exam",
-    description: "Multivariable calculus and linear algebra.",
-    time: "MWF 08:00 - 09:00",
-    assessments: "Midterm, Final Exam",
-  },
-  "Physics 101": {
-    name: "Physics 101",
-    hurdle: "Pass in all assessments",
-    description: "Fundamentals of classical mechanics.",
-    time: "TTh 08:30 - 10:00",
-    assessments: "Quizzes, Final Exam",
-  },
-  "Chemistry 101": {
-    name: "Chemistry 101",
-    hurdle: "Complete all lab work",
-    description: "Basics of chemistry and laboratory techniques.",
-    time: "MWF 13:00 - 14:00",
-    assessments: "Lab Reports, Final Exam",
-  },
-};
-
-const semesterData = {
-  "Semester 1": ["Math 101", "English 101", "History 101"],
-  "Semester 2": ["Math 102", "English 102", "Biology 101"],
-  "Semester 3": ["Math 201", "Physics 101", "Chemistry 101"],
-};
+interface Subject {
+  id: number;
+  name: string;
+  semester: string;
+  description?: string;
+  credits?: number;
+  professor?: string;
+}
 
 export default function Subjects() {
-  const [selectedSemester, setSelectedSemester] = useState("");
-  const [subjects, setSubjects] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newSubject, setNewSubject] = useState({
-    name: "",
-    hurdle: "",
-    description: "",
-    time: "",
-    assessments: "",
-  });
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSemester, setSelectedSemester] = useState<string>("");
+  const [semesters, setSemesters] = useState<string[]>([]);
+  const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
-  const handleSemesterChange = (event) => {
-    const semester = event.target.value;
-    setSelectedSemester(semester);
-    setSubjects(semesterData[semester] || []);
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const fetchSubjects = async () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user.id) {
+      try {
+        const response = await fetch(
+          `http://localhost:5001/subjects/${user.id}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setSubjects(data.subjects);
+
+          const uniqueSemesters = Array.from(
+            new Set(data.subjects.map((subject: Subject) => subject.semester))
+          );
+          setSemesters(uniqueSemesters);
+
+          if (uniqueSemesters.length > 0) {
+            setSelectedSemester(uniqueSemesters[0]);
+          }
+        } else {
+          console.error("Failed to fetch subjects");
+        }
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      }
+    }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewSubject((prev) => ({ ...prev, [name]: value }));
+  const filteredSubjects = subjects.filter(
+    (subject) => subject.semester === selectedSemester
+  );
+
+  const toggleSubjectDetails = (subjectId: number) => {
+    setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
   };
 
-  const handleAddSubject = () => {
-    if (newSubject.name.trim()) {
-      // Update subjects and subjectDetails dynamically
-      setSubjects((prevSubjects) => [...prevSubjects, newSubject.name]);
-      subjectDetails[newSubject.name] = { ...newSubject };
-      setNewSubject({
-        name: "",
-        hurdle: "",
-        description: "",
-        time: "",
-        assessments: "",
+  const handleEdit = (subject: Subject) => {
+    setEditingSubject(subject);
+  };
+
+  const handleDelete = async (subjectId: number) => {
+    if (window.confirm("Are you sure you want to delete this subject?")) {
+      try {
+        const response = await fetch(`http://localhost:5001/subjects/${subjectId}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          fetchSubjects(); // Refresh the subject list
+        } else {
+          console.error("Failed to delete subject");
+        }
+      } catch (error) {
+        console.error("Error deleting subject:", error);
+      }
+    }
+  };
+
+  const handleSave = async (updatedSubject: Subject) => {
+    try {
+      const response = await fetch(`http://localhost:5001/subjects/${updatedSubject.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedSubject),
       });
-      setIsModalOpen(false);
+      if (response.ok) {
+        fetchSubjects(); // Refresh the subject list
+        setEditingSubject(null);
+      } else {
+        console.error("Failed to update subject");
+      }
+    } catch (error) {
+      console.error("Error updating subject:", error);
     }
   };
 
   return (
     <>
       <Header />
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-6">Calculator Page</h1>
+      <div className="container mx-auto mt-8">
+        <h1 className="text-2xl font-bold mb-4">Your Subjects</h1>
 
-        <div className="mb-6">
-          <label htmlFor="semester" className="block text-gray-700 mb-2">
-            Choose a Semester:
+        <div className="mb-4">
+          <label
+            htmlFor="semester-select"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Select Semester:
           </label>
           <select
-            id="semester"
-            className="w-full p-2 border border-gray-300 rounded"
+            id="semester-select"
             value={selectedSemester}
-            onChange={handleSemesterChange}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
-            <option value="">Select a semester</option>
-            {Object.keys(semesterData).map((semester) => (
+            {semesters.map((semester) => (
               <option key={semester} value={semester}>
                 {semester}
               </option>
@@ -139,99 +126,112 @@ export default function Subjects() {
           </select>
         </div>
 
-        {selectedSemester && (
-          <div className="mt-4">
-            <h2 className="text-xl font-semibold mb-4">
-              Subjects for {selectedSemester}:
-            </h2>
-            <ul className="list-disc pl-6">
-              {subjects.map((subject, index) => (
-                <li key={index} className="mb-2">
-                  <SubjectInfo {...subjectDetails[subject]} />
-                </li>
-              ))}
-            </ul>
-            <button
-              className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors duration-200 mt-4"
-              onClick={() => setIsModalOpen(true)}
-            >
-              Add New Subject
-            </button>
-          </div>
-        )}
-
-        {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-6 w-80">
-              <h2 className="text-xl font-bold mb-4">Add New Subject</h2>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Subject Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={newSubject.name}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Hurdle</label>
-                <input
-                  type="text"
-                  name="hurdle"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={newSubject.hurdle}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Description</label>
-                <input
-                  type="text"
-                  name="description"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={newSubject.description}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Time</label>
-                <input
-                  type="text"
-                  name="time"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={newSubject.time}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Assessments</label>
-                <input
-                  type="text"
-                  name="assessments"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={newSubject.assessments}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded mr-2 hover:bg-gray-400 transition-colors duration-200"
-                  onClick={() => setIsModalOpen(false)}
+        {filteredSubjects.length > 0 ? (
+          <ul className="space-y-2">
+            {filteredSubjects.map((subject) => (
+              <li
+                key={subject.id}
+                className="bg-white shadow overflow-hidden sm:rounded-lg"
+              >
+                <div
+                  className="p-4 cursor-pointer flex justify-between items-center"
+                  onClick={() => toggleSubjectDetails(subject.id)}
                 >
-                  Cancel
-                </button>
-                <button
-                  className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-200"
-                  onClick={handleAddSubject}
-                >
-                  Add Subject
-                </button>
-              </div>
-            </div>
-          </div>
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    {subject.name}
+                  </h3>
+                  <div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(subject);
+                      }}
+                      className="text-blue-600 hover:text-blue-800 mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(subject.id);
+                      }}
+                      className="text-red-600 hover:text-red-800 mr-2"
+                    >
+                      Delete
+                    </button>
+                    <span className="text-gray-400">
+                      {expandedSubject === subject.id ? "▲" : "▼"}
+                    </span>
+                  </div>
+                </div>
+                {expandedSubject === subject.id && (
+                  <div className="px-4 py-2 border-t border-gray-200">
+                    <p className="text-sm text-gray-500">
+                      Semester: {subject.semester}
+                    </p>
+                    {subject.description && (
+                      <p className="text-sm text-gray-500">
+                        Description: {subject.description}
+                      </p>
+                    )}
+                    {subject.credits && (
+                      <p className="text-sm text-gray-500">
+                        Credits: {subject.credits}
+                      </p>
+                    )}
+                    {subject.professor && (
+                      <p className="text-sm text-gray-500">
+                        Professor: {subject.professor}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No subjects found for the selected semester.</p>
         )}
       </div>
+
+      {editingSubject && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">Edit Subject</h3>
+            <input
+              type="text"
+              value={editingSubject.name}
+              onChange={(e) => setEditingSubject({ ...editingSubject, name: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+            <input
+              type="text"
+              value={editingSubject.semester}
+              onChange={(e) => setEditingSubject({ ...editingSubject, semester: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+            <textarea
+              value={editingSubject.description || ""}
+              onChange={(e) => setEditingSubject({ ...editingSubject, description: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            ></textarea>
+            <div className="mt-4">
+              <button
+                onClick={() => handleSave(editingSubject)}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditingSubject(null)}
+                className="ml-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
