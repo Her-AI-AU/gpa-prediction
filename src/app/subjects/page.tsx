@@ -6,7 +6,10 @@ interface Subject {
   id: number;
   name: string;
   semester: string;
-  description?: string;
+  hurdle?: number;
+  score?: number;
+  assessments_list?: string;
+  user_id: number;
 }
 
 export default function Subjects() {
@@ -25,16 +28,12 @@ export default function Subjects() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user.id) {
       try {
-        const response = await fetch(
-          `http://localhost:5001/subjects/${user.id}`
-        );
+        const response = await fetch(`http://localhost:5001/subjects/${user.id}`);
         if (response.ok) {
           const data = await response.json();
           setSubjects(data.subjects);
 
-          const uniqueSemesters = Array.from(
-            new Set(data.subjects.map((subject: Subject) => subject.semester))
-          );
+          const uniqueSemesters = Array.from(new Set(data.subjects.map((subject: Subject) => subject.semester)));
           setSemesters(uniqueSemesters);
 
           if (uniqueSemesters.length > 0) {
@@ -65,12 +64,9 @@ export default function Subjects() {
   const handleDelete = async (subjectId: number) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       try {
-        const response = await fetch(
-          `http://localhost:5001/subjects/${subjectId}`,
-          {
-            method: "DELETE",
-          }
-        );
+        const response = await fetch(`http://localhost:5001/subjects/${subjectId}`, {
+          method: "DELETE",
+        });
         if (response.ok) {
           fetchSubjects(); // Refresh the subject list
         } else {
@@ -84,17 +80,22 @@ export default function Subjects() {
 
   const handleSave = async (updatedSubject: Subject) => {
     try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
       const url = isCreating
         ? "http://localhost:5001/subjects"
         : `http://localhost:5001/subjects/${updatedSubject.id}`;
       const method = isCreating ? "POST" : "PUT";
+
+      const body = isCreating
+        ? { name: updatedSubject.name, semester: updatedSubject.semester, user_id: user.id }
+        : updatedSubject;
 
       const response = await fetch(url, {
         method: method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedSubject),
+        body: JSON.stringify(body),
       });
       if (response.ok) {
         fetchSubjects(); // Refresh the subject list
@@ -109,11 +110,12 @@ export default function Subjects() {
   };
 
   const handleCreate = () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
     setEditingSubject({
       id: 0, // This will be assigned by the server
       name: "",
       semester: selectedSemester,
-      description: "",
+      user_id: user.id,
     });
     setIsCreating(true);
   };
@@ -196,9 +198,19 @@ export default function Subjects() {
                     <p className="text-sm text-gray-500">
                       Semester: {subject.semester}
                     </p>
-                    {subject.description && (
+                    {subject.hurdle && (
                       <p className="text-sm text-gray-500">
-                        Description: {subject.description}
+                        Hurdle: {subject.hurdle}
+                      </p>
+                    )}
+                    {subject.score && (
+                      <p className="text-sm text-gray-500">
+                        Score: {subject.score}
+                      </p>
+                    )}
+                    {subject.assessments_list && (
+                      <p className="text-sm text-gray-500">
+                        Assessments: {subject.assessments_list}
                       </p>
                     )}
                   </div>
@@ -220,35 +232,42 @@ export default function Subjects() {
             <input
               type="text"
               value={editingSubject.name}
-              onChange={(e) =>
-                setEditingSubject({ ...editingSubject, name: e.target.value })
-              }
+              onChange={(e) => setEditingSubject({ ...editingSubject, name: e.target.value })}
               placeholder="Subject Name"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             />
             <input
               type="text"
               value={editingSubject.semester}
-              onChange={(e) =>
-                setEditingSubject({
-                  ...editingSubject,
-                  semester: e.target.value,
-                })
-              }
+              onChange={(e) => setEditingSubject({ ...editingSubject, semester: e.target.value })}
               placeholder="Semester"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             />
-            <textarea
-              value={editingSubject.description || ""}
-              onChange={(e) =>
-                setEditingSubject({
-                  ...editingSubject,
-                  description: e.target.value,
-                })
-              }
-              placeholder="Description"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            ></textarea>
+            {!isCreating && (
+              <>
+                <input
+                  type="number"
+                  value={editingSubject.hurdle || ""}
+                  onChange={(e) => setEditingSubject({ ...editingSubject, hurdle: Number(e.target.value) })}
+                  placeholder="Hurdle"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                />
+                <input
+                  type="number"
+                  value={editingSubject.score || ""}
+                  onChange={(e) => setEditingSubject({ ...editingSubject, score: Number(e.target.value) })}
+                  placeholder="Score"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                />
+                <input
+                  type="text"
+                  value={editingSubject.assessments_list || ""}
+                  onChange={(e) => setEditingSubject({ ...editingSubject, assessments_list: e.target.value })}
+                  placeholder="Assessments List"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                />
+              </>
+            )}
             <div className="mt-4">
               <button
                 onClick={() => handleSave(editingSubject)}
