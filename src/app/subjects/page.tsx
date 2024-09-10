@@ -7,8 +7,6 @@ interface Subject {
   name: string;
   semester: string;
   description?: string;
-  credits?: number;
-  professor?: string;
 }
 
 export default function Subjects() {
@@ -17,6 +15,7 @@ export default function Subjects() {
   const [semesters, setSemesters] = useState<string[]>([]);
   const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchSubjects();
@@ -60,14 +59,18 @@ export default function Subjects() {
 
   const handleEdit = (subject: Subject) => {
     setEditingSubject(subject);
+    setIsCreating(false);
   };
 
   const handleDelete = async (subjectId: number) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       try {
-        const response = await fetch(`http://localhost:5001/subjects/${subjectId}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(
+          `http://localhost:5001/subjects/${subjectId}`,
+          {
+            method: "DELETE",
+          }
+        );
         if (response.ok) {
           fetchSubjects(); // Refresh the subject list
         } else {
@@ -81,8 +84,13 @@ export default function Subjects() {
 
   const handleSave = async (updatedSubject: Subject) => {
     try {
-      const response = await fetch(`http://localhost:5001/subjects/${updatedSubject.id}`, {
-        method: "PUT",
+      const url = isCreating
+        ? "http://localhost:5001/subjects"
+        : `http://localhost:5001/subjects/${updatedSubject.id}`;
+      const method = isCreating ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -91,6 +99,7 @@ export default function Subjects() {
       if (response.ok) {
         fetchSubjects(); // Refresh the subject list
         setEditingSubject(null);
+        setIsCreating(false);
       } else {
         console.error("Failed to update subject");
       }
@@ -99,11 +108,29 @@ export default function Subjects() {
     }
   };
 
+  const handleCreate = () => {
+    setEditingSubject({
+      id: 0, // This will be assigned by the server
+      name: "",
+      semester: selectedSemester,
+      description: "",
+    });
+    setIsCreating(true);
+  };
+
   return (
     <>
       <Header />
       <div className="container mx-auto mt-8">
-        <h1 className="text-2xl font-bold mb-4">Your Subjects</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Your Subjects</h1>
+          <button
+            onClick={handleCreate}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Create Subject
+          </button>
+        </div>
 
         <div className="mb-4">
           <label
@@ -174,16 +201,6 @@ export default function Subjects() {
                         Description: {subject.description}
                       </p>
                     )}
-                    {subject.credits && (
-                      <p className="text-sm text-gray-500">
-                        Credits: {subject.credits}
-                      </p>
-                    )}
-                    {subject.professor && (
-                      <p className="text-sm text-gray-500">
-                        Professor: {subject.professor}
-                      </p>
-                    )}
                   </div>
                 )}
               </li>
@@ -197,22 +214,39 @@ export default function Subjects() {
       {editingSubject && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">Edit Subject</h3>
+            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">
+              {isCreating ? "Create Subject" : "Edit Subject"}
+            </h3>
             <input
               type="text"
               value={editingSubject.name}
-              onChange={(e) => setEditingSubject({ ...editingSubject, name: e.target.value })}
+              onChange={(e) =>
+                setEditingSubject({ ...editingSubject, name: e.target.value })
+              }
+              placeholder="Subject Name"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             />
             <input
               type="text"
               value={editingSubject.semester}
-              onChange={(e) => setEditingSubject({ ...editingSubject, semester: e.target.value })}
+              onChange={(e) =>
+                setEditingSubject({
+                  ...editingSubject,
+                  semester: e.target.value,
+                })
+              }
+              placeholder="Semester"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             />
             <textarea
               value={editingSubject.description || ""}
-              onChange={(e) => setEditingSubject({ ...editingSubject, description: e.target.value })}
+              onChange={(e) =>
+                setEditingSubject({
+                  ...editingSubject,
+                  description: e.target.value,
+                })
+              }
+              placeholder="Description"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             ></textarea>
             <div className="mt-4">
@@ -220,10 +254,13 @@ export default function Subjects() {
                 onClick={() => handleSave(editingSubject)}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Save
+                {isCreating ? "Create" : "Save"}
               </button>
               <button
-                onClick={() => setEditingSubject(null)}
+                onClick={() => {
+                  setEditingSubject(null);
+                  setIsCreating(false);
+                }}
                 className="ml-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Cancel
