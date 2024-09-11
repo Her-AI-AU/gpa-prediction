@@ -1,6 +1,8 @@
-"use client";
-import { useState, useEffect } from "react";
+"use client"
+import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
+import SubjectCard from "@/components/subjectCard";
+import { Plus } from 'lucide-react';
 
 interface Subject {
   id: number;
@@ -16,9 +18,6 @@ export default function Subjects() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [semesters, setSemesters] = useState<string[]>([]);
-  const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
-  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchSubjects();
@@ -52,13 +51,24 @@ export default function Subjects() {
     (subject) => subject.semester === selectedSemester
   );
 
-  const toggleSubjectDetails = (subjectId: number) => {
-    setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
-  };
-
-  const handleEdit = (subject: Subject) => {
-    setEditingSubject(subject);
-    setIsCreating(false);
+  const handleSave = async (updatedSubject: Subject) => {
+    try {
+      const url = `http://localhost:5001/subjects/${updatedSubject.id}`;
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedSubject),
+      });
+      if (response.ok) {
+        fetchSubjects(); // Refresh the subject list
+      } else {
+        console.error("Failed to update subject");
+      }
+    } catch (error) {
+      console.error("Error updating subject:", error);
+    }
   };
 
   const handleDelete = async (subjectId: number) => {
@@ -78,74 +88,56 @@ export default function Subjects() {
     }
   };
 
-  const handleSave = async (updatedSubject: Subject) => {
+  const handleCreate = async () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const newSubject = {
+      name: "New Subject",
+      semester: selectedSemester,
+      user_id: user.id,
+    };
+
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const url = isCreating
-        ? "http://localhost:5001/subjects"
-        : `http://localhost:5001/subjects/${updatedSubject.id}`;
-      const method = isCreating ? "POST" : "PUT";
-
-      const body = isCreating
-        ? { name: updatedSubject.name, semester: updatedSubject.semester, user_id: user.id }
-        : updatedSubject;
-
-      const response = await fetch(url, {
-        method: method,
+      const response = await fetch("http://localhost:5001/subjects", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(newSubject),
       });
       if (response.ok) {
         fetchSubjects(); // Refresh the subject list
-        setEditingSubject(null);
-        setIsCreating(false);
       } else {
-        console.error("Failed to update subject");
+        console.error("Failed to create subject");
       }
     } catch (error) {
-      console.error("Error updating subject:", error);
+      console.error("Error creating subject:", error);
     }
-  };
-
-  const handleCreate = () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setEditingSubject({
-      id: 0, // This will be assigned by the server
-      name: "",
-      semester: selectedSemester,
-      user_id: user.id,
-    });
-    setIsCreating(true);
   };
 
   return (
     <>
       <Header />
-      <div className="container mx-auto mt-8">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Your Subjects</h1>
+      <div className="container mx-auto mt-8 px-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Your Subjects</h1>
           <button
             onClick={handleCreate}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full flex items-center"
           >
-            Create Subject
+            <Plus size={20} className="mr-2" />
+            Add Subject
           </button>
         </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="semester-select"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div className="mb-6">
+          <label htmlFor="semester-select" className="block text-sm font-medium text-gray-700 mb-2">
             Select Semester:
           </label>
           <select
             id="semester-select"
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             {semesters.map((semester) => (
               <option key={semester} value={semester}>
@@ -156,138 +148,20 @@ export default function Subjects() {
         </div>
 
         {filteredSubjects.length > 0 ? (
-          <ul className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredSubjects.map((subject) => (
-              <li
+              <SubjectCard
                 key={subject.id}
-                className="bg-white shadow overflow-hidden sm:rounded-lg"
-              >
-                <div
-                  className="p-4 cursor-pointer flex justify-between items-center"
-                  onClick={() => toggleSubjectDetails(subject.id)}
-                >
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {subject.name}
-                  </h3>
-                  <div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(subject);
-                      }}
-                      className="text-blue-600 hover:text-blue-800 mr-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(subject.id);
-                      }}
-                      className="text-red-600 hover:text-red-800 mr-2"
-                    >
-                      Delete
-                    </button>
-                    <span className="text-gray-400">
-                      {expandedSubject === subject.id ? "▲" : "▼"}
-                    </span>
-                  </div>
-                </div>
-                {expandedSubject === subject.id && (
-                  <div className="px-4 py-2 border-t border-gray-200">
-                    <p className="text-sm text-gray-500">
-                      Semester: {subject.semester}
-                    </p>
-                    {subject.hurdle && (
-                      <p className="text-sm text-gray-500">
-                        Hurdle: {subject.hurdle}
-                      </p>
-                    )}
-                    {subject.score && (
-                      <p className="text-sm text-gray-500">
-                        Score: {subject.score}
-                      </p>
-                    )}
-                    {subject.assessments_list && (
-                      <p className="text-sm text-gray-500">
-                        Assessments: {subject.assessments_list}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </li>
+                subject={subject}
+                onSave={handleSave}
+                onDelete={handleDelete}
+              />
             ))}
-          </ul>
+          </div>
         ) : (
-          <p>No subjects found for the selected semester.</p>
+          <p className="text-center text-gray-500 mt-8">No subjects found for the selected semester.</p>
         )}
       </div>
-
-      {editingSubject && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">
-              {isCreating ? "Create Subject" : "Edit Subject"}
-            </h3>
-            <input
-              type="text"
-              value={editingSubject.name}
-              onChange={(e) => setEditingSubject({ ...editingSubject, name: e.target.value })}
-              placeholder="Subject Name"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            />
-            <input
-              type="text"
-              value={editingSubject.semester}
-              onChange={(e) => setEditingSubject({ ...editingSubject, semester: e.target.value })}
-              placeholder="Semester"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            />
-            {!isCreating && (
-              <>
-                <input
-                  type="number"
-                  value={editingSubject.hurdle || ""}
-                  onChange={(e) => setEditingSubject({ ...editingSubject, hurdle: Number(e.target.value) })}
-                  placeholder="Hurdle"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <input
-                  type="number"
-                  value={editingSubject.score || ""}
-                  onChange={(e) => setEditingSubject({ ...editingSubject, score: Number(e.target.value) })}
-                  placeholder="Score"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <input
-                  type="text"
-                  value={editingSubject.assessments_list || ""}
-                  onChange={(e) => setEditingSubject({ ...editingSubject, assessments_list: e.target.value })}
-                  placeholder="Assessments List"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-              </>
-            )}
-            <div className="mt-4">
-              <button
-                onClick={() => handleSave(editingSubject)}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                {isCreating ? "Create" : "Save"}
-              </button>
-              <button
-                onClick={() => {
-                  setEditingSubject(null);
-                  setIsCreating(false);
-                }}
-                className="ml-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
