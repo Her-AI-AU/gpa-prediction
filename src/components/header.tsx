@@ -2,23 +2,32 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export const Header = () => {
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else if (requiresAuth(pathname)) {
+      alert("Please log in first.");
+      router.push("/login");
     }
-  }, []);
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
     router.push("/");
+  };
+
+  const requiresAuth = (path) => {
+    const authRequiredPaths = ["/subjects", "/predict"];
+    return authRequiredPaths.some(authPath => path.startsWith(authPath));
   };
 
   return (
@@ -39,10 +48,22 @@ export const Header = () => {
         >
           <ul id="menu-nav-menu" className="lg:flex lg:items-center lg:gap-16">
             <li className="menu-item">
-              <Link href="/subjects">Subjects</Link>
+              <Link href="/subjects" onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  alert("Please log in first.");
+                  router.push("/login");
+                }
+              }}>Subjects</Link>
             </li>
             <li className="menu-item">
-              <Link href="/predict">Predict</Link>
+              <Link href="/predict" onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  alert("Please log in first.");
+                  router.push("/login");
+                }
+              }}>Predict</Link>
             </li>
           </ul>
         </nav>
