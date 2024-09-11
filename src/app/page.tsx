@@ -19,11 +19,11 @@ export default function Home() {
 
           <Link
             className="bg-white shadow-md rounded-lg p-6 text-center w-80"
-            href="/predictor"
+            href="/predict"
           >
-            <h2 className="text-2xl font-semibold mb-4">Predictor</h2>
+            <h2 className="text-2xl font-semibold mb-4">Predict</h2>
             <p className="text-gray-600 mb-6">
-              Use our predictor tool to control scores based on current scores.
+              Use our predict tool to control scores based on current scores.
             </p>
           </Link>
         </div>

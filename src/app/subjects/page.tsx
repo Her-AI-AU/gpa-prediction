@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import SubjectCard from "@/components/subjectCard";
-import { Plus } from 'lucide-react';
+import { Plus, ChartLine } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Subject {
   id: number;
@@ -18,6 +19,7 @@ export default function Subjects() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [semesters, setSemesters] = useState<string[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     fetchSubjects();
@@ -114,19 +116,32 @@ export default function Subjects() {
     }
   };
 
+  const handlePredict = () => {
+    router.push(`/predict?semester=${selectedSemester}`);
+  };
+
   return (
     <>
       <Header />
       <div className="container mx-auto mt-8 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Your Subjects</h1>
-          <button
-            onClick={handleCreate}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full flex items-center"
-          >
-            <Plus size={20} className="mr-2" />
-            Add Subject
-          </button>
+          <div className="flex space-x-4">
+            <button
+              onClick={handlePredict}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full flex items-center transition duration-300 ease-in-out"
+            >
+              <ChartLine size={20} className="mr-2" />
+              Predict This Semester
+            </button>
+            <button
+              onClick={handleCreate}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full flex items-center transition duration-300 ease-in-out"
+            >
+              <Plus size={20} className="mr-2" />
+              Add Subject
+            </button>
+          </div>
         </div>
 
         <div className="mb-6">

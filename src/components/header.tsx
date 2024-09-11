@@ -42,7 +42,7 @@ export const Header = () => {
               <Link href="/subjects">Subjects</Link>
             </li>
             <li className="menu-item">
-              <Link href="/predictor">Predictor</Link>
+              <Link href="/predict">Predict</Link>
             </li>
           </ul>
         </nav>
