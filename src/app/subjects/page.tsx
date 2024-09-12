@@ -11,6 +11,7 @@ interface Subject {
   semester: string;
   hurdle?: number;
   score?: number;
+  target_score?: number;
   assessments_list?: string;
   user_id: number;
 }
