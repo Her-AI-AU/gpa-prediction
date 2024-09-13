@@ -28,6 +28,7 @@ export default function SubjectAssessments() {
   const [subject, setSubject] = useState<Subject | null>(null);
   const [editingAssessment, setEditingAssessment] = useState<number | null>(null);
   const [totalScore, setTotalScore] = useState<number>(0);
+  const [remainingAverage, setRemainingAverage] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -37,7 +38,8 @@ export default function SubjectAssessments() {
 
   useEffect(() => {
     calculateTotalScore();
-  }, [assessments]);
+    calculateRemainingAverage();
+  }, [assessments, subject]);
 
   const fetchSubjectAndAssessments = async () => {
     try {
@@ -60,11 +62,41 @@ export default function SubjectAssessments() {
   const calculateTotalScore = () => {
     const score = assessments.reduce((total, assessment) => {
       if (assessment.rate && assessment.score) {
-        return total + (assessment.rate / 100) * assessment.score;
+        return total + (assessment.rate / 100) * Number(assessment.score);
       }
       return total;
     }, 0);
     setTotalScore(Number(score.toFixed(2)));
+  };
+
+  const calculateRemainingAverage = () => {
+    if (!subject?.target_score) {
+      setRemainingAverage(null);
+      return;
+    }
+
+    const totalWeight = assessments.reduce((sum, assessment) => sum + (assessment.rate || 0), 0);
+    const scoredWeight = assessments.reduce((sum, assessment) => {
+      if (assessment.rate && assessment.score) {
+        return sum + assessment.rate;
+      }
+      return sum;
+    }, 0);
+    console.log(totalWeight);
+    console.log(scoredWeight);
+    
+
+    const remainingWeight = totalWeight - scoredWeight;
+
+    if (remainingWeight <= 0) {
+      setRemainingAverage(null);
+      return;
+    }
+
+    const remainingScore = subject.target_score - totalScore;
+    const average = (remainingScore / remainingWeight) * 100;
+
+    setRemainingAverage(Number(average.toFixed(2)));
   };
 
   const handleEdit = (assessmentId: number) => {
@@ -197,6 +229,14 @@ export default function SubjectAssessments() {
         <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">
           <p className="font-bold">Total Score: {totalScore}</p>
         </div>
+        {remainingAverage !== null && (
+          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+            <p className="font-bold">
+              Required Average for Remaining Assessments: {remainingAverage}%
+              {' '}({getGrade(remainingAverage)})
+            </p>
+          </div>
+        )}
         {assessments.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {assessments.map((assessment) => (
