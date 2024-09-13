@@ -16,16 +16,6 @@ export default function Home() {
               View your subjects and their scores.
             </p>
           </Link>
-
-          <Link
-            className="bg-white shadow-md rounded-lg p-6 text-center w-80"
-            href="/predict"
-          >
-            <h2 className="text-2xl font-semibold mb-4">Predict</h2>
-            <p className="text-gray-600 mb-6">
-              Use our predict tool to control scores based on current scores.
-            </p>
-          </Link>
         </div>
       </div>
     </>

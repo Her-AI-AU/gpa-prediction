@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import SubjectCard from "@/components/subjectCard";
-import { Plus, ChartLine } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Subject {
@@ -140,10 +140,6 @@ export default function Subjects() {
     } catch (error) {
       console.error("Error creating subject:", error);
     }
-  };
-
-  const handlePredict = () => {
-    router.push(`/predict?semester=${selectedSemester}`);
   };
 
   return (

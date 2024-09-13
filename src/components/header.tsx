@@ -26,8 +26,8 @@ export const Header = () => {
   };
 
   const requiresAuth = (path) => {
-    const authRequiredPaths = ["/subjects", "/predict"];
-    return authRequiredPaths.some(authPath => path.startsWith(authPath));
+    const authRequiredPaths = ["/subjects"];
+    return authRequiredPaths.some((authPath) => path.startsWith(authPath));
   };
 
   return (
@@ -48,22 +48,18 @@ export const Header = () => {
         >
           <ul id="menu-nav-menu" className="lg:flex lg:items-center lg:gap-16">
             <li className="menu-item">
-              <Link href="/subjects" onClick={(e) => {
-                if (!user) {
-                  e.preventDefault();
-                  alert("Please log in first.");
-                  router.push("/login");
-                }
-              }}>Subjects</Link>
-            </li>
-            <li className="menu-item">
-              <Link href="/predict" onClick={(e) => {
-                if (!user) {
-                  e.preventDefault();
-                  alert("Please log in first.");
-                  router.push("/login");
-                }
-              }}>Predict</Link>
+              <Link
+                href="/subjects"
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    alert("Please log in first.");
+                    router.push("/login");
+                  }
+                }}
+              >
+                Subjects
+              </Link>
             </li>
           </ul>
         </nav>
