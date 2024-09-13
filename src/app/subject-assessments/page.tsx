@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Edit, Save, X } from "lucide-react";
+import { getGrade } from '@/utils/globalParameters';
 
 interface Assessment {
   id: number;
@@ -10,7 +11,7 @@ interface Assessment {
   description: string;
   hurdle?: number;
   rate?: number;
-  score?: number;
+  score?: number | string;
   subject_id: number;
 }
 
@@ -157,6 +158,12 @@ export default function SubjectAssessments() {
     }
   };
 
+  const renderGrade = (score: number | string | undefined) => {
+    if (score === '' || score === undefined) return '';
+    const grade = getGrade(Number(score));
+    return `${grade} (${score})`;
+  };
+
   if (!id) {
     return <div>Please select a subject to view its assessments.</div>;
   }
@@ -291,7 +298,7 @@ export default function SubjectAssessments() {
                     <h2 className="text-xl font-semibold mb-2">{assessment.name}</h2>
                     <p className="text-sm">Hurdle: {assessment.hurdle}</p>
                     <p className="text-sm">Rate: {assessment.rate}%</p>
-                    <p className="text-sm">Score: {assessment.score}</p>
+                    <p className="text-sm">Score: {renderGrade(assessment.score)}</p>
                     <p className="text-gray-600 mb-2">{assessment.description}</p>
                     <div className="flex justify-end mt-4">
                       <button
