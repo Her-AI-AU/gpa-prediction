@@ -58,7 +58,7 @@ export const Header = () => {
                   }
                 }}
               >
-                Subjects
+                My Subjects
               </Link>
             </li>
           </ul>
