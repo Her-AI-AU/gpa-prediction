@@ -82,9 +82,6 @@ export default function SubjectAssessments() {
       }
       return sum;
     }, 0);
-    console.log(totalWeight);
-    console.log(scoredWeight);
-    
 
     const remainingWeight = totalWeight - scoredWeight;
 

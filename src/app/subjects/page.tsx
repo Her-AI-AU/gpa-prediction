@@ -11,6 +11,7 @@ interface Subject {
   semester: string;
   hurdle?: number;
   score?: number;
+  weight: number;
   target_score?: number;
   assessments_list?: string;
   user_id: number;
@@ -20,11 +21,16 @@ export default function Subjects() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [semesters, setSemesters] = useState<string[]>([]);
+  const [currentWAM, setCurrentWAM] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetchSubjects();
   }, []);
+
+  useEffect(() => {
+    calculateWAM();
+  }, [subjects]);
 
   const fetchSubjects = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -47,6 +53,25 @@ export default function Subjects() {
       } catch (error) {
         console.error("Error fetching subjects:", error);
       }
+    }
+  };
+
+  const calculateWAM = () => {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+
+    subjects.forEach(subject => {
+      if (subject.score !== undefined && subject.weight) {
+        totalWeightedScore += subject.score * subject.weight;
+        totalWeight += subject.weight;
+      }
+    });
+
+    if (totalWeight > 0) {
+      const wam = totalWeightedScore / totalWeight;
+      setCurrentWAM(Number(wam.toFixed(2)));
+    } else {
+      setCurrentWAM(null);
     }
   };
 
@@ -124,20 +149,28 @@ export default function Subjects() {
   return (
     <>
       <Header />
-      <div className="container mx-auto mt-8 px-4">
+      <div className="container mx-auto mt-8 px-4 font-sans">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Your Subjects</h1>
-          <div className="flex space-x-4">
-            <button
-              onClick={handlePredict}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full flex items-center transition duration-300 ease-in-out"
-            >
-              <ChartLine size={20} className="mr-2" />
-              Predict This Semester
-            </button>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <select
+                id="semester-select"
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="" disabled>Choose a semester</option>
+                {semesters.map((semester) => (
+                  <option key={semester} value={semester}>
+                    {semester}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleCreate}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full flex items-center transition duration-300 ease-in-out"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-300 ease-in-out"
             >
               <Plus size={20} className="mr-2" />
               Add Subject
@@ -145,24 +178,9 @@ export default function Subjects() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="semester-select" className="block text-sm font-medium text-gray-700 mb-2">
-            Select Semester:
-          </label>
-          <select
-            id="semester-select"
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            {semesters.map((semester) => (
-              <option key={semester} value={semester}>
-                {semester}
-              </option>
-            ))}
-          </select>
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">
+          <p className="font-bold">Current WAM: {currentWAM !== null ? `${currentWAM}` : 'N/A'}</p>
         </div>
-
         {filteredSubjects.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredSubjects.map((subject) => (
