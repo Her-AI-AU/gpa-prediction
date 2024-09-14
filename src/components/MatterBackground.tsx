@@ -4,9 +4,10 @@ import { useRef, useEffect, useState } from "react";
 
 interface MatterBackgroundProps {
   circleCount?: number;
+  fillPercentage?: number;
 }
 
-export function MatterBackground({ circleCount = 300 }: MatterBackgroundProps) {
+export function MatterBackground({ circleCount = 100, fillPercentage = 0.5 }: MatterBackgroundProps) {
   const matterContainer = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
   const renderRef = useRef<Matter.Render | null>(null);
@@ -46,8 +47,16 @@ export function MatterBackground({ circleCount = 300 }: MatterBackgroundProps) {
 
     const THINCCESS = 20;
     const CIRCLE_COUNT = circleCount;
-    const MAX_RADIUS = containerWidth * (containerHeight - 80) * 0.0001;
-    const MIN_RADIUS = MAX_RADIUS * 0.2;
+
+    // Calculate radius based on fill percentage
+    const totalArea = containerWidth * containerHeight;
+    const totalCircleArea = totalArea * fillPercentage;
+    const singleCircleArea = totalCircleArea / CIRCLE_COUNT;
+    const radius = Math.sqrt(singleCircleArea / Math.PI);
+
+    // Set min and max radius
+    const MAX_RADIUS = radius * 1.4;
+    const MIN_RADIUS = radius * 0.6;
 
     matterContainer.current.innerHTML = "";
 
@@ -83,11 +92,11 @@ export function MatterBackground({ circleCount = 300 }: MatterBackgroundProps) {
     const circles: Matter.Body[] = [];
 
     for (let i = 0; i < CIRCLE_COUNT; i++) {
-      const radius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS);
+      const circleRadius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS);
       var circle = Bodies.circle(
         Math.random() * containerWidth,
         Math.random() * containerHeight,
-        radius,
+        circleRadius,
         {
           friction: 0.3,
           restitution: 0.6,
@@ -140,11 +149,11 @@ export function MatterBackground({ circleCount = 300 }: MatterBackgroundProps) {
       render.textures = {};
       Mouse.clearSourceEvents(mouse);
     };
-  }, [windowSize, circleCount]);
+  }, [windowSize, circleCount, fillPercentage]);
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-blue-500 to-purple-500">
-      <div ref={matterContainer}/>
+      <div ref={matterContainer} className="w-full h-full" />
     </div>
   );
 }

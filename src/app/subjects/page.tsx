@@ -151,7 +151,9 @@ export default function Subjects() {
 
   return (
     <div className="relative min-h-screen">
-      <MatterBackground circleCount={currentWAM !== null ? currentWAM : 30} />
+      <MatterBackground
+        fillPercentage={currentWAM !== null ? currentWAM / 150 : 0.5}
+      />
       <div className="relative z-10">
         <Header />
         <div className="container mx-auto mt-8 px-4 font-sans">
