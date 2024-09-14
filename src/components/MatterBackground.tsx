@@ -46,7 +46,7 @@ export function MatterBackground({ circleCount = 300 }: MatterBackgroundProps) {
 
     const THINCCESS = 20;
     const CIRCLE_COUNT = circleCount;
-    const MAX_RADIUS = Math.min(containerWidth, containerHeight) * 0.05;
+    const MAX_RADIUS = containerWidth * (containerHeight - 80) * 0.0001;
     const MIN_RADIUS = MAX_RADIUS * 0.2;
 
     matterContainer.current.innerHTML = "";
@@ -143,7 +143,7 @@ export function MatterBackground({ circleCount = 300 }: MatterBackgroundProps) {
   }, [windowSize, circleCount]);
 
   return (
-    <div className="absolute inset-0 bg-gradient-to-b from-blue-500 to-purple-500">
+    <div className="fixed inset-0 bg-gradient-to-b from-blue-500 to-purple-500">
       <div ref={matterContainer}/>
     </div>
   );

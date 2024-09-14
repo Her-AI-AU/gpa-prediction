@@ -23,7 +23,6 @@ export default function Subjects() {
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [semesters, setSemesters] = useState<string[]>([]);
   const [currentWAM, setCurrentWAM] = useState<number | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     fetchSubjects();
@@ -152,7 +151,7 @@ export default function Subjects() {
 
   return (
     <div className="relative min-h-screen">
-      <MatterBackground circleCount={currentWAM !== null ? currentWAM * 4 : 80} />
+      <MatterBackground circleCount={currentWAM !== null ? currentWAM : 30} />
       <div className="relative z-10">
         <Header />
         <div className="container mx-auto mt-8 px-4 font-sans">
