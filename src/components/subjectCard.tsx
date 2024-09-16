@@ -20,7 +20,11 @@ interface SubjectCardProps {
   onDelete: (id: number) => void;
 }
 
-const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSave, onDelete }) => {
+const SubjectCard: React.FC<SubjectCardProps> = ({
+  subject,
+  onSave,
+  onDelete,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSubject, setEditedSubject] = useState(subject);
 
@@ -115,7 +119,11 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSave, onDelete }) 
       ) : (
         <>
           <div className="flex-grow overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-2">{subject.name}</h3>
+            <Link href={`/subject-assessments?id=${subject.id}`}>
+              <h3 className="text-xl font-semibold mb-2 text-blue-600 hover:text-blue-800 cursor-pointer">
+                {subject.name}
+              </h3>
+            </Link>
             <p className="text-gray-600 mb-1">Semester: {subject.semester}</p>
             {subject.hurdle !== undefined && (
               <p className="text-gray-600 mb-1">Hurdle: {subject.hurdle}</p>
@@ -127,30 +135,24 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onSave, onDelete }) 
               <p className="text-gray-600 mb-1">Weight: {subject.weight}</p>
             )}
             {subject.target_score !== undefined && (
-              <p className="text-gray-600 mb-1">Target Score: {subject.target_score}</p>
+              <p className="text-gray-600 mb-1">
+                Target Score: {subject.target_score}
+              </p>
             )}
           </div>
-          <div className="mt-4 flex justify-between items-center">
-            <Link
-              href={`/subject-assessments?id=${subject.id}`}
-              className="text-blue-500 hover:text-blue-600"
+          <div className="mt-4 flex justify-end items-center">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mr-2 text-blue-600"
             >
-              View Assessments
-            </Link>
-            <div>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="mr-2 text-blue-600 hover:text-blue-800"
-              >
-                <Edit size={20} />
-              </button>
-              <button
-                onClick={() => onDelete(subject.id)}
-                className="text-red-600 hover:text-red-800"
-              >
-                <X size={20} />
-              </button>
-            </div>
+              <Edit size={20} />
+            </button>
+            <button
+              onClick={() => onDelete(subject.id)}
+              className="text-red-600"
+            >
+              <X size={20} />
+            </button>
           </div>
         </>
       )}

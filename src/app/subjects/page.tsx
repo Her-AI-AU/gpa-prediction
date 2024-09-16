@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ArrowLeft, Plus, Share2, X } from "lucide-react";
 import SubjectCard from "@/components/subjectCard";
-import { Plus, Share2, X } from "lucide-react";
 import { MatterBackground } from "@/components/MatterBackground";
 import html2canvas from "html2canvas";
 
@@ -19,20 +20,31 @@ interface Subject {
 }
 
 export default function Subjects() {
+  const searchParams = useSearchParams();
+  const urlSemester = searchParams.get("semester");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [semesters, setSemesters] = useState<string[]>([]);
   const [currentWAM, setCurrentWAM] = useState<number | null>(null);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchSubjects();
   }, []);
 
   useEffect(() => {
+    if (urlSemester && semesters.includes(urlSemester)) {
+      setSelectedSemester(urlSemester);
+    } else if (semesters.length > 0) {
+      setSelectedSemester(semesters[0]);
+    }
+  }, [urlSemester, semesters]);
+
+  useEffect(() => {
     calculateWAM();
-  }, [subjects]);
+  }, [subjects, selectedSemester]);
 
   const fetchSubjects = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -50,7 +62,9 @@ export default function Subjects() {
           );
           setSemesters(uniqueSemesters);
 
-          if (uniqueSemesters.length > 0) {
+          if (urlSemester && uniqueSemesters.includes(urlSemester)) {
+            setSelectedSemester(urlSemester);
+          } else if (uniqueSemesters.length > 0) {
             setSelectedSemester(uniqueSemesters[0]);
           }
         } else {
@@ -66,7 +80,11 @@ export default function Subjects() {
     let totalWeightedScore = 0;
     let totalWeight = 0;
 
-    subjects.forEach((subject) => {
+    const semesterSubjects = selectedSemester
+      ? subjects.filter((subject) => subject.semester === selectedSemester)
+      : subjects;
+
+    semesterSubjects.forEach((subject) => {
       if (subject.score !== undefined && subject.weight) {
         totalWeightedScore += subject.score * subject.weight;
         totalWeight += subject.weight;
@@ -81,9 +99,17 @@ export default function Subjects() {
     }
   };
 
-  const filteredSubjects = subjects.filter(
-    (subject) => subject.semester === selectedSemester
-  );
+  const filteredSubjects = selectedSemester
+    ? subjects.filter((subject) => subject.semester === selectedSemester)
+    : subjects;
+
+  const groupedSubjects = filteredSubjects.reduce((acc, subject) => {
+    if (!acc[subject.semester]) {
+      acc[subject.semester] = [];
+    }
+    acc[subject.semester].push(subject);
+    return acc;
+  }, {} as Record<string, Subject[]>);
 
   const handleSave = async (updatedSubject: Subject) => {
     try {
@@ -157,6 +183,10 @@ export default function Subjects() {
 
   const closeSharePopup = () => {
     setShowSharePopup(false);
+  };
+
+  const handleBackNiuXiaoJiang = () => {
+    router.back();
   };
 
   const shareViaTwitter = () => {
@@ -241,18 +271,27 @@ export default function Subjects() {
       <div className="relative z-10">
         <Header />
         <div className="container mx-auto mt-8 px-4 font-sans">
-          <div className="flex justify-end items-center mb-6">
-            <div className="flex items-center space-x-4 ml-auto">
+          <div className="flex justify-between items-center mb-6">
+            <button
+              onClick={handleBackNiuXiaoJiang}
+              className="text-gray-600 hover:text-gray-800 p-2 rounded-full transition-colors duration-200"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <div className="flex items-center space-x-4">
               <div className="relative">
                 <select
                   id="semester-select"
                   value={selectedSemester}
-                  onChange={(e) => setSelectedSemester(e.target.value)}
+                  onChange={(e) => {
+                    const newSemester = e.target.value;
+                    setSelectedSemester(newSemester);
+                    window.history.pushState({}, '', `/subjects?semester=${encodeURIComponent(newSemester)}`);
+                  }}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 >
-                  <option value="" disabled>
-                    Choose a semester
-                  </option>
+                  <option value="">All Semesters</option>
                   {semesters.map((semester) => (
                     <option key={semester} value={semester}>
                       {semester}
@@ -279,21 +318,30 @@ export default function Subjects() {
 
           <div className="bg-blue-100 bg-opacity-80 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded">
             <p className="font-bold">
-              Current WAM: {currentWAM !== null ? `${currentWAM}` : "N/A"}
+              {selectedSemester ? `${selectedSemester} WAM:` : "Overall WAM:"}{" "}
+              {currentWAM !== null ? `${currentWAM}` : "N/A"}
             </p>
           </div>
-          {filteredSubjects.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredSubjects.map((subject) => (
-                <SubjectCard
-                  key={subject.id}
-                  subject={subject}
-                  onSave={handleSave}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          ) : (
+
+          {Object.entries(groupedSubjects).map(
+            ([semester, semesterSubjects]) => (
+              <div key={semester} className="mb-8">
+                <h2 className="text-2xl font-semibold mb-4">{semester}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {semesterSubjects.map((subject) => (
+                    <SubjectCard
+                      key={subject.id}
+                      subject={subject}
+                      onSave={handleSave}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+
+          {Object.keys(groupedSubjects).length === 0 && (
             <p className="text-center text-white mt-8 bg-gray-800 bg-opacity-50 p-4 rounded">
               No subjects found for the selected semester.
             </p>
