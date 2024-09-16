@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 export const Header = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -17,7 +17,7 @@ export const Header = () => {
       alert("Please log in first.");
       router.push("/login");
     }
-  }, [pathname]);
+  }, [pathname, router]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -25,7 +25,7 @@ export const Header = () => {
     router.push("/");
   };
 
-  const requiresAuth = (path) => {
+  const requiresAuth = (path: string): boolean => {
     const authRequiredPaths = ["/subjects"];
     return authRequiredPaths.some((authPath) => path.startsWith(authPath));
   };

@@ -143,11 +143,14 @@ export function MatterBackground({ circleCount = 100, fillPercentage = 0.5 }: Ma
       Render.stop(render);
       Runner.stop(runner);
       Engine.clear(engine);
-      render.canvas.remove();
-      render.canvas = null;
-      render.context = null;
+      if (render.canvas) {
+        render.canvas.remove();
+      }
+      render.context = null as any;
       render.textures = {};
-      Mouse.clearSourceEvents(mouse);
+      if (mouse) {
+        Mouse.clearSourceEvents(mouse);
+      }
     };
   }, [windowSize, circleCount, fillPercentage]);
 

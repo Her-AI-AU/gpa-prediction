@@ -13,12 +13,11 @@ interface Subject {
   semester: string;
   hurdle?: number;
   score?: number;
-  weight: number;
+  weight?: number;
   target_score?: number;
   assessments_list?: string;
   user_id: number;
 }
-
 export default function Subjects() {
   const searchParams = useSearchParams();
   const urlSemester = searchParams.get("semester");
@@ -59,7 +58,7 @@ export default function Subjects() {
 
           const uniqueSemesters = Array.from(
             new Set(data.subjects.map((subject: Subject) => subject.semester))
-          );
+          ) as string[];
           setSemesters(uniqueSemesters);
 
           if (urlSemester && uniqueSemesters.includes(urlSemester)) {
@@ -122,7 +121,7 @@ export default function Subjects() {
         body: JSON.stringify(updatedSubject),
       });
       if (response.ok) {
-        fetchSubjects();
+        await fetchSubjects();
       } else {
         console.error("Failed to update subject");
       }
@@ -158,7 +157,7 @@ export default function Subjects() {
       semester: selectedSemester,
       user_id: user.id,
     };
-
+  
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/subjects`,
