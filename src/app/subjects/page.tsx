@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import SubjectCard from "@/components/subjectCard";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Plus, Share2, X } from "lucide-react";
 import { MatterBackground } from "@/components/MatterBackground";
+import html2canvas from "html2canvas";
 
 interface Subject {
   id: number;
@@ -23,6 +23,8 @@ export default function Subjects() {
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [semesters, setSemesters] = useState<string[]>([]);
   const [currentWAM, setCurrentWAM] = useState<number | null>(null);
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
 
   useEffect(() => {
     fetchSubjects();
@@ -94,7 +96,7 @@ export default function Subjects() {
         body: JSON.stringify(updatedSubject),
       });
       if (response.ok) {
-        fetchSubjects(); // Refresh the subject list
+        fetchSubjects();
       } else {
         console.error("Failed to update subject");
       }
@@ -113,7 +115,7 @@ export default function Subjects() {
           }
         );
         if (response.ok) {
-          fetchSubjects(); // Refresh the subject list
+          fetchSubjects();
         } else {
           console.error("Failed to delete subject");
         }
@@ -140,13 +142,95 @@ export default function Subjects() {
         body: JSON.stringify(newSubject),
       });
       if (response.ok) {
-        fetchSubjects(); // Refresh the subject list
+        fetchSubjects();
       } else {
         console.error("Failed to create subject");
       }
     } catch (error) {
       console.error("Error creating subject:", error);
     }
+  };
+
+  const handleShare = () => {
+    setShowSharePopup(true);
+  };
+
+  const closeSharePopup = () => {
+    setShowSharePopup(false);
+  };
+
+  const shareViaTwitter = () => {
+    const text = encodeURIComponent(
+      `I use HerAI.GPA to predict my GPA. My current WAM is ${currentWAM}. Check out yoursubjects! \n ${window.location.href}`
+    );
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
+    closeSharePopup();
+  };
+
+  const shareViaFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    const message = encodeURIComponent(
+      `Check out my current WAM: ${currentWAM}. Here are my subjects: ${subjects
+        .map((s) => s.name)
+        .join(", ")}`
+    );
+
+    // This opens Facebook's page
+    // need facebook api for create new post
+    window.open(`https://www.facebook.com/`, "_blank");
+    closeSharePopup();
+  };
+
+  const takeScreenshot = async () => {
+    try {
+      // Hide the share popup
+      setShowSharePopup(false);
+
+      // Show the content for the screenshot
+      const screenshotContent = document.createElement("div");
+      screenshotContent.innerHTML = `
+        <div style="position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+          <div style="background: white; padding: 32px; border-radius: 12px; width: 90%; max-width: 540px; text-align: center; font-family: sans-serif;">
+            <h2 style="font-size: 28px; font-weight: 600; margin-bottom: 24px;">HerAI.GPA</h2>
+            <p style="font-size: 18px; margin-bottom: 16px;">My current WAM is ${currentWAM}</p>
+            <p style="font-size: 18px; margin-bottom: 16px;">Check out your subjects!</p>
+            <p style="font-size: 16px; word-break: break-all;">${window.location.href}</p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(screenshotContent);
+
+      // Wait for the content to be rendered
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Capture the entire page
+      const canvas = await html2canvas(document.body);
+
+      // Remove the screenshot content
+      document.body.removeChild(screenshotContent);
+
+      // Convert the canvas to a data URL
+      const dataUrl = canvas.toDataURL("image/png");
+
+      // Create a temporary anchor element
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "my_subjects_screenshot.png";
+
+      // Programmatically click the link to trigger the download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Show the confirmation popup
+      setShowConfirmationPopup(true);
+    } catch (error) {
+      console.error("Failed to take screenshot:", error);
+    }
+  };
+
+  const closeConfirmationPopup = () => {
+    setShowConfirmationPopup(false);
   };
 
   return (
@@ -157,9 +241,8 @@ export default function Subjects() {
       <div className="relative z-10">
         <Header />
         <div className="container mx-auto mt-8 px-4 font-sans">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-white">Your Subjects</h1>
-            <div className="flex items-center space-x-4">
+          <div className="flex justify-end items-center mb-6">
+            <div className="flex items-center space-x-4 ml-auto">
               <div className="relative">
                 <select
                   id="semester-select"
@@ -183,6 +266,13 @@ export default function Subjects() {
               >
                 <Plus size={20} className="mr-2" />
                 Add Subject
+              </button>
+              <button
+                onClick={handleShare}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-300 ease-in-out"
+              >
+                <Share2 size={20} className="mr-2" />
+                Share
               </button>
             </div>
           </div>
@@ -210,6 +300,120 @@ export default function Subjects() {
           )}
         </div>
       </div>
+
+      {/* share popup */}
+      {showSharePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 relative">
+            <h2 className="text-2xl font-semibold mb-6">Share with friends</h2>
+            <button
+              onClick={closeSharePopup}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex justify-center space-x-6 mb-6">
+              <button
+                onClick={shareViaFacebook}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                <svg
+                  className="w-8 h-8"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
+                </svg>
+              </button>
+              <button
+                onClick={shareViaTwitter}
+                className="text-blue-400 hover:text-blue-600"
+              >
+                <svg
+                  className="w-8 h-8"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path>
+                </svg>
+              </button>
+              <button
+                onClick={takeScreenshot}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <svg
+                  className="w-8 h-8"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12c0 5.51 4.48 10 10 10s10-4.49 10-10c0-5.52-4.48-10-10-10zm3.92 13.89v.11c0 .67-.54 1.2-1.21 1.2H9.29c-.67 0-1.21-.54-1.21-1.2v-.11c0-.67.54-1.2 1.21-1.2h5.42c.67 0 1.21.54 1.21 1.2zm-6.16-5.13l1.94-2.32c.2-.24.57-.24.77 0l1.94 2.32c.18.22.01.54-.27.54H10.03c-.28.01-.45-.32-.27-.54z"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="mt-4">
+              <label
+                htmlFor="event-url"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Event URL
+              </label>
+              <div className="flex">
+                <input
+                  type="text"
+                  id="event-url"
+                  className="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  value={window.location.href}
+                  readOnly
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                  }}
+                  className="bg-gray-100 px-3 py-2 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-200"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation popup */}
+      {showConfirmationPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 relative">
+            <h2 className="text-2xl font-semibold mb-6">Screenshot Saved</h2>
+            <button
+              onClick={closeConfirmationPopup}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
+            <p className="mb-4">
+              Your screenshot has been saved. Share it with your friends!
+            </p>
+            <button
+              onClick={closeConfirmationPopup}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
