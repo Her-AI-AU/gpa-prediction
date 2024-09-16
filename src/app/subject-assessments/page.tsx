@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/header";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Edit, Save, X } from "lucide-react";
@@ -39,10 +39,55 @@ export default function SubjectAssessments() {
     }
   }, [id]);
 
+  const calculateTotalScore = useCallback(() => {
+    const score = assessments.reduce((total, assessment) => {
+      if (assessment.rate && assessment.score !== undefined && assessment.score !== "") {
+        return total + (Number(assessment.rate) / 100) * Number(assessment.score);
+      }
+      return total;
+    }, 0);
+    setTotalScore(Number(score.toFixed(2)));
+  }, [assessments]);
+
   useEffect(() => {
     calculateTotalScore();
+  }, [calculateTotalScore]);
+
+  const calculateRemainingAverage = useCallback(() => {
+    if (!subject?.target_score || assessments.length === 0) {
+      setRemainingAverage(null);
+      return;
+    }
+
+    const totalWeight = assessments.reduce(
+      (sum, assessment) => sum + (Number(assessment.rate) || 0),
+      0
+    );
+
+    const scoredWeight = assessments.reduce((sum, assessment) => {
+      if (assessment.rate && assessment.score !== undefined && assessment.score !== "") {
+        return sum + Number(assessment.rate);
+      }
+      return sum;
+    }, 0);
+
+    const remainingWeight = totalWeight - scoredWeight;
+
+    if (remainingWeight <= 0) {
+      setRemainingAverage(null);
+      return;
+    }
+
+    const remainingScore = subject.target_score - totalScore;
+    const average = (remainingScore / remainingWeight) * 100;
+
+    setRemainingAverage(Number(average.toFixed(2)));
+  }, [subject, assessments, totalScore]);
+
+  useEffect(() => {
     calculateRemainingAverage();
-  }, [assessments, subject]);
+    console.log(remainingAverage);
+  }, [calculateRemainingAverage]);
 
   const fetchSubjectAndAssessments = async () => {
     try {
@@ -64,46 +109,6 @@ export default function SubjectAssessments() {
     } catch (error) {
       console.error("Error fetching subject and assessments:", error);
     }
-  };
-
-  const calculateTotalScore = () => {
-    const score = assessments.reduce((total, assessment) => {
-      if (assessment.rate && assessment.score) {
-        return total + (assessment.rate / 100) * Number(assessment.score);
-      }
-      return total;
-    }, 0);
-    setTotalScore(Number(score.toFixed(2)));
-  };
-
-  const calculateRemainingAverage = () => {
-    if (!subject?.target_score) {
-      setRemainingAverage(null);
-      return;
-    }
-
-    const totalWeight = assessments.reduce(
-      (sum, assessment) => sum + (assessment.rate || 0),
-      0
-    );
-    const scoredWeight = assessments.reduce((sum, assessment) => {
-      if (assessment.rate && assessment.score) {
-        return sum + assessment.rate;
-      }
-      return sum;
-    }, 0);
-
-    const remainingWeight = totalWeight - scoredWeight;
-
-    if (remainingWeight <= 0) {
-      setRemainingAverage(null);
-      return;
-    }
-
-    const remainingScore = subject.target_score - totalScore;
-    const average = (remainingScore / remainingWeight) * 100;
-
-    setRemainingAverage(Number(average.toFixed(2)));
   };
 
   const handleEdit = (assessmentId: number) => {
@@ -201,7 +206,7 @@ export default function SubjectAssessments() {
       if (response.ok) {
         const addedAssessment = await response.json();
         setAssessments([...assessments, addedAssessment]);
-        setEditingAssessment(addedAssessment.id); // Start editing the new assessment
+        setEditingAssessment(addedAssessment.id);
       } else {
         console.error("Failed to add assessment");
       }
