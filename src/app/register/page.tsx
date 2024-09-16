@@ -1,37 +1,40 @@
-"use client"
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 
 export default function RegisterPage() {
-  const [name, setName] = useState('');
-  const [studentId, setStudentId] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:5001/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, student_id: studentId, password }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name, student_id: studentId, password }),
+        }
+      );
 
       if (response.ok) {
-        router.push('/login');
+        router.push("/login");
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Registration failed');
+        setError(errorData.error || "Registration failed");
       }
     } catch (error) {
-      console.error('Error during registration:', error);
-      setError('An error occurred during registration');
+      console.error("Error during registration:", error);
+      setError("An error occurred during registration");
     }
   };
 

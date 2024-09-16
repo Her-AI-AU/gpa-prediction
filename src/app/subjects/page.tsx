@@ -51,7 +51,7 @@ export default function Subjects() {
     if (user.id) {
       try {
         const response = await fetch(
-          `http://localhost:5001/subjects/${user.id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/subjects/${user.id}`
         );
         if (response.ok) {
           const data = await response.json();
@@ -113,7 +113,7 @@ export default function Subjects() {
 
   const handleSave = async (updatedSubject: Subject) => {
     try {
-      const url = `http://localhost:5001/subjects/${updatedSubject.id}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/subjects/${updatedSubject.id}`;
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -135,7 +135,7 @@ export default function Subjects() {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       try {
         const response = await fetch(
-          `http://localhost:5001/subjects/${subjectId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/subjects/${subjectId}`,
           {
             method: "DELETE",
           }
@@ -160,13 +160,16 @@ export default function Subjects() {
     };
 
     try {
-      const response = await fetch("http://localhost:5001/subjects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newSubject),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/subjects`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newSubject),
+        }
+      );
       if (response.ok) {
         fetchSubjects();
       } else {
@@ -281,7 +284,11 @@ export default function Subjects() {
                   onChange={(e) => {
                     const newSemester = e.target.value;
                     setSelectedSemester(newSemester);
-                    window.history.pushState({}, '', `/subjects?semester=${encodeURIComponent(newSemester)}`);
+                    window.history.pushState(
+                      {},
+                      "",
+                      `/subjects?semester=${encodeURIComponent(newSemester)}`
+                    );
                   }}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 >

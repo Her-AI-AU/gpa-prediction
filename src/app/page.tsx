@@ -22,7 +22,7 @@ export default function Home() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user.id) {
       try {
-        const response = await fetch(`http://localhost:5001/subjects/${user.id}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subjects/${user.id}`);
         if (response.ok) {
           const data = await response.json();
           const grouped = data.subjects.reduce((acc: Record<string, Subject[]>, subject: Subject) => {

@@ -92,10 +92,10 @@ export default function SubjectAssessments() {
   const fetchSubjectAndAssessments = async () => {
     try {
       const subjectResponse = await fetch(
-        `http://localhost:5001/subject/${id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/subject/${id}`
       );
       const assessmentsResponse = await fetch(
-        `http://localhost:5001/assessments/${id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/assessments/${id}`
       );
 
       if (subjectResponse.ok && assessmentsResponse.ok) {
@@ -118,7 +118,7 @@ export default function SubjectAssessments() {
   const handleSave = async (assessment: Assessment) => {
     try {
       const response = await fetch(
-        `http://localhost:5001/assessments/${assessment.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/assessments/${assessment.id}`,
         {
           method: "PUT",
           headers: {
@@ -162,7 +162,7 @@ export default function SubjectAssessments() {
     if (window.confirm("Are you sure you want to delete this assessment?")) {
       try {
         const response = await fetch(
-          `http://localhost:5001/assessments/${assessmentId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/assessments/${assessmentId}`,
           {
             method: "DELETE",
           }
@@ -194,7 +194,7 @@ export default function SubjectAssessments() {
     };
 
     try {
-      const response = await fetch("http://localhost:5001/assessments", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/assessments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
