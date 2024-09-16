@@ -169,7 +169,6 @@ export default function SubjectAssessments() {
         );
 
         if (response.ok) {
-          // Remove the deleted assessment from the state
           setAssessments(
             assessments.filter((assessment) => assessment.id !== assessmentId)
           );

@@ -230,24 +230,18 @@ export default function Subjects() {
       `;
       document.body.appendChild(screenshotContent);
 
-      // Wait for the content to be rendered
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Capture the entire page
       const canvas = await html2canvas(document.body);
 
-      // Remove the screenshot content
       document.body.removeChild(screenshotContent);
 
-      // Convert the canvas to a data URL
       const dataUrl = canvas.toDataURL("image/png");
 
-      // Create a temporary anchor element
       const link = document.createElement("a");
       link.href = dataUrl;
       link.download = "my_subjects_screenshot.png";
 
-      // Programmatically click the link to trigger the download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
