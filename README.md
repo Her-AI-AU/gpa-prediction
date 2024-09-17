@@ -8,15 +8,16 @@ To run the project locally:
 
 0. Run backend locally [express repository](https://github.com/Her-AI-AU/gpa-prediction-express)
 1. Clone the repository
-2. Install dependencies:
+2. Create `.env` file in the root of the project, add `NEXT_PUBLIC_API_URL` with the value of your local backend server URL (default: `NEXT_PUBLIC_API_URL=http://localhost:5001`
+3. Install dependencies:
    ```bash
    npm install
    ```
-3. Start the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
 ## Demo
 
