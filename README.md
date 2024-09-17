@@ -1,11 +1,12 @@
 # GPA Prediction App
 
-This is a [Next.js](https://nextjs.org/) project for HerAIGPA prediction.
+This is a Next.js project for HerAIGPA prediction.
 
 ## Getting Started
 
 To run the project locally:
 
+0. Run backend locally [express repository](https://github.com/Her-AI-AU/gpa-prediction-express)
 1. Clone the repository
 2. Install dependencies:
    ```bash
@@ -19,8 +20,9 @@ To run the project locally:
 
 ## Demo
 
-- **Live Demo**: [https://your-demo-site-url.com](https://xxxx.com) #not ready yet
-- **Demo Video**: [Watch on YouTube](https://www.youtube.com/your-video-link) #not ready yet
+The demo is hosted on Render free plan. so it may take a while(up to 3 min) to load the first time for cold start.
+- **Live Demo**: [Demo site](https://gpa-prediction.onrender.com) 
+- **Demo Video**: [Video on google drive](https://drive.google.com/file/d/1l7J801a4NFeKKlJyexjYPxrx14lIXT04/view?usp=sharing) 
 
 ## Learn More
 
@@ -31,4 +33,4 @@ To learn more about Next.js, check out the following resources:
 
 ## Feedback
 
-Your feedback and contributions are welcome! Please check out [the Next.js GitHub repository](https://github.com/vercel/next.js/).
+Your feedback and contributions are welcome! Please check out [GitHub repository](https://github.com/Her-AI-AU/gpa-prediction).
